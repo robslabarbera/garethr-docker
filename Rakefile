@@ -22,6 +22,8 @@ end
 
 PuppetLint.configuration.relative = true
 PuppetLint.configuration.disable_80chars
+PuppetLint.configuration.log_format = "%{path}:%{linenumber}:%{check}:%{KIND}:%{message}"
+PuppetLint.configuration.disable_case_without_default
 PuppetLint.configuration.fail_on_warnings = true
 
 # Forsake support for Puppet 2.6.2 for the benefit of cleaner code.
@@ -38,7 +40,6 @@ exclude_paths = [
   "spec/**/*",
 ]
 PuppetLint.configuration.ignore_paths = exclude_paths
-PuppetSyntax.fail_on_deprecation_notices = false
 PuppetSyntax.exclude_paths = exclude_paths
 
 begin

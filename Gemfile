@@ -3,34 +3,30 @@ source "https://rubygems.org"
 group :test do
   gem "rake", "~> 10.0"
   if puppet_gem_version = ENV['PUPPET_GEM_VERSION']
-    gem "puppet", puppet_gem_version
+    gem "puppet", ENV['PUPPET_GEM_VERSION']
   elsif puppet_git_url = ENV['PUPPET_GIT_URL']
-    gem "puppet", :git => puppet_git_url
+    gem "puppet", :git => "#{puppet_git_url}"
   else
-    gem "puppet"
+    gem "puppet", ENV['PUPPET_GEM_VERSION']
   end
   gem "puppet-lint"
   gem "puppet-lint-unquoted_string-check"
-  gem "rspec-puppet"
+  gem "rspec-puppet", "2.2.0"
   gem "puppet-syntax"
   gem "puppetlabs_spec_helper"
-  gem "metadata-json-lint", "1.1.0"
-  gem "rspec"
+  gem "metadata-json-lint"
+  gem "rspec", '< 3.2.0' # Support for 1.8.7
   gem "rspec-retry"
-  gem "simplecov", ">= 0.11.0"
-  gem "simplecov-console"
-  gem "json_pure", "<= 2.0.1" # 2.0.2 requires Ruby 2+
-end
-
-group :system_tests do
-  gem "beaker-puppet_install_helper", :require => false
-  gem "beaker-rspec"
-  gem "beaker", "~> 2.0"
+  gem 'simplecov', '>= 0.11.0'
+  gem 'simplecov-console'
 end
 
 group :development do
   gem "travis"
   gem "travis-lint"
+  gem "beaker", "~> 2.0"
+  gem "beaker-puppet_install_helper", :require => false
+  gem "beaker-rspec"
   gem "puppet-blacksmith"
   gem "guard-rake"
   gem "pry"

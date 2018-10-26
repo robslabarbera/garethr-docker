@@ -1,12 +1,8 @@
 require 'beaker-rspec/spec_helper'
 require 'beaker-rspec/helpers/serverspec'
+require 'pry'
 require 'beaker/puppet_install_helper'
 require 'rspec/retry'
-
-begin
-  require 'pry'
-rescue LoadError # rubocop:disable Lint/HandleExceptions for optional loading
-end
 
 run_puppet_install_helper unless ENV['BEAKER_provision'] == 'no'
 
@@ -26,7 +22,7 @@ RSpec.configure do |c|
   c.before :suite do
     # Install module and dependencies
     hosts.each do |host|
-      copy_module_to(host, :source => proj_root, :module_name => 'docker')
+      copy_module_to(host, :source => proj_root, :module_name => 'docker_old')
       # Due to RE-6764, running yum update renders the machine unable to install
       # other software. Thus this workaround.
       if fact_on(host, 'operatingsystem') == 'RedHat'
@@ -48,15 +44,7 @@ compose_test:
   image: ubuntu:14.04
   command: /bin/sh -c "while true; do echo hello world; sleep 1; done"
       EOS
-      docker_compose_content_v2 = <<-EOS
-version: "2"
-services:
-  compose_test:
-    image: ubuntu:14.04
-    command: /bin/sh -c "while true; do echo hello world; sleep 1; done"
-      EOS
       create_remote_file(host, "/tmp/docker-compose.yml", docker_compose_content)
-      create_remote_file(host, "/tmp/docker-compose-v2.yml", docker_compose_content_v2)
     end
   end
 end

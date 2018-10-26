@@ -1,4 +1,4 @@
-# == Class: docker
+# == Class: docker_old
 #
 # Module to install an up-to-date version of Docker from package.
 #
@@ -57,11 +57,6 @@
 #   Enable IP masquerading for bridge's IP range.
 #   The default is true.
 #
-# [*icc*]
-#   Enable or disable Docker's unrestricted inter-container and Docker daemon host communication.
-#   (Requires iptables=true to disable)
-#   Default is undef. (Docker daemon's default is true)
-#
 # [*bip*]
 #   Specify docker's network bridge IP, in CIDR notation.
 #   Defaults to undefined.
@@ -113,8 +108,6 @@
 #                Writes log messages to a GELF endpoint: Graylog or Logstash.
 #     fluentd  : Fluentd logging driver for Docker.
 #                Writes log messages to fluentd (forward input).
-#     splunk   : Splunk logging driver for Docker.
-#                Writes log messages to Splunk (HTTP Event Collector).
 #
 # [*log_opt*]
 #   Set the log driver specific options
@@ -142,9 +135,6 @@
 #                fluentd-tag={{.ID}} - short container id (12 characters)|
 #                            {{.FullID}} - full container id
 #                            {{.Name}} - container name
-#     splunk   :
-#                splunk-token=<splunk_http_event_collector_token>
-#                splunk-url=https://your_splunk_instance:8088
 #
 # [*selinux_enabled*]
 #   Enable selinux support. Default is false. SELinux does  not  presently
@@ -155,20 +145,6 @@
 #   Whether or not to use the upstream package source.
 #   If you run your own package mirror, you may set this
 #   to false.
-#
-# [*pin_upstream_package_source*]
-#   Pin upstream package source; this option currently only has any effect on
-#   apt-based distributions.  Set to false to remove pinning on the upstream
-#   package repository.  See also "apt_source_pin_level".
-#   Defaults to true
-#
-# [*apt_source_pin_level*]
-#   What level to pin our source package repository to; this only is relevent
-#   if you're on an apt-based system (Debian, Ubuntu, etc) and
-#   $use_upstream_package_source is set to true.  Set this to false to disable
-#   pinning, and undef to ensure the apt preferences file apt::source uses to
-#   define pins is removed.
-#   Defaults to 10
 #
 # [*package_source_location*]
 #   If you're using an upstream package source, what is it's
@@ -223,7 +199,7 @@
 # [*storage_driver*]
 #   Specify a storage driver to use
 #   Default is undef: let docker choose the correct one
-#   Valid values: aufs, devicemapper, btrfs, overlay, overlay2, vfs, zfs
+#   Valid values: aufs, devicemapper, btrfs, overlay, vfs, zfs
 #
 # [*dm_basesize*]
 #   The size to use when creating the base device, which limits the size of images and containers.
@@ -274,9 +250,7 @@
 #   Defaults to false
 #
 # [*dm_override_udev_sync_check*]
-#   By default, the devicemapper backend attempts to synchronize with the udev
-#   device manager for the Linux kernel. This option allows disabling that
-#   synchronization, to continue even though the configuration may be buggy.
+#   By default, the devicemapper backend attempts to synchronize with the udev device manager for the Linux kernel. This option allows disabling that synchronization, to continue even though the configuration may be buggy.
 #   Defaults to true
 #
 # [*manage_package*]
@@ -302,14 +276,6 @@
 # [*docker_users*]
 #   Specify an array of users to add to the docker group
 #   Default is empty
-#
-# [*docker_group*]
-#   Specify a string for the docker group
-#   Default is OS and package specific
-#
-# [*daemon_environment_files*]
-#   Specify additional environment files to add to the
-#   service-overrides.conf
 #
 # [*repo_opt*]
 #   Specify a string to pass as repository options (RedHat only)
@@ -344,13 +310,11 @@
 # [*storage_pool_autoextend_percent*]
 #   Extend the pool by specified percentage when threshold is hit.
 #
-class docker(
+class docker_old(
   $version                           = $docker::params::version,
   $ensure                            = $docker::params::ensure,
   $prerequired_packages              = $docker::params::prerequired_packages,
   $docker_cs                         = $docker::params::docker_cs,
-  $package_cs_source_location        = $docker::params::package_cs_source_location,
-  $package_cs_key_source             = $docker::params::package_cs_key_source,
   $tcp_bind                          = $docker::params::tcp_bind,
   $tls_enable                        = $docker::params::tls_enable,
   $tls_verify                        = $docker::params::tls_verify,
@@ -362,7 +326,6 @@ class docker(
   $bip                               = $docker::params::bip,
   $mtu                               = $docker::params::mtu,
   $iptables                          = $docker::params::iptables,
-  $icc                               = $docker::params::icc,
   $socket_bind                       = $docker::params::socket_bind,
   $fixed_cidr                        = $docker::params::fixed_cidr,
   $bridge                            = $docker::params::bridge,
@@ -372,8 +335,6 @@ class docker(
   $log_opt                           = $docker::params::log_opt,
   $selinux_enabled                   = $docker::params::selinux_enabled,
   $use_upstream_package_source       = $docker::params::use_upstream_package_source,
-  $pin_upstream_package_source       = $docker::params::pin_upstream_package_source,
-  $apt_source_pin_level              = $docker::params::apt_source_pin_level,
   $package_source_location           = $docker::params::package_source_location,
   $package_release                   = $docker::params::package_release,
   $package_repos                     = $docker::params::package_repos,
@@ -417,8 +378,6 @@ class docker(
   $docker_command                    = $docker::params::docker_command,
   $daemon_subcommand                 = $docker::params::daemon_subcommand,
   $docker_users                      = [],
-  $docker_group                      = $docker::params::docker_group,
-  $daemon_environment_files          = [],
   $repo_opt                          = $docker::params::repo_opt,
   $nowarn_kernel                     = $docker::params::nowarn_kernel,
   $storage_devs                      = $docker::params::storage_devs,
@@ -433,38 +392,32 @@ class docker(
   $storage_pool_autoextend_percent   = $docker::params::storage_pool_autoextend_percent,
   $storage_config                    = $docker::params::storage_config,
   $storage_config_template           = $docker::params::storage_config_template,
-  $storage_setup_file                = $docker::params::storage_setup_file,
   $service_provider                  = $docker::params::service_provider,
   $service_config                    = $docker::params::service_config,
   $service_config_template           = $docker::params::service_config_template,
   $service_overrides_template        = $docker::params::service_overrides_template,
   $service_hasstatus                 = $docker::params::service_hasstatus,
   $service_hasrestart                = $docker::params::service_hasrestart,
-) inherits docker::params {
+) inherits docker_old::params {
 
   validate_string($version)
-  validate_re($::osfamily, '^(Debian|RedHat|Archlinux|Gentoo)$',
-              'This module only works on Debian or Red Hat based systems or on Archlinux as on Gentoo.')
+  validate_re($::osfamily, '^(Debian|RedHat|Archlinux|Gentoo)$', 'This module only works on Debian or Red Hat based systems or on Archlinux as on Gentoo.')
   validate_bool($manage_kernel)
   validate_bool($manage_package)
   validate_bool($docker_cs)
   validate_bool($manage_service)
   validate_array($docker_users)
-  validate_array($daemon_environment_files)
   validate_array($log_opt)
   validate_bool($tls_enable)
   validate_bool($ip_forward)
   validate_bool($iptables)
   validate_bool($ip_masq)
-  if $icc != undef {
-    validate_bool($icc)
-  }
   validate_string($bridge)
   validate_string($fixed_cidr)
   validate_string($default_gateway)
   validate_string($bip)
 
-  if ($default_gateway) and (!$bridge) {
+  if ($fixed_cidr or $default_gateway) and (!$bridge) {
     fail('You must provide the $bridge parameter.')
   }
 
@@ -473,8 +426,7 @@ class docker(
   }
 
   if $log_driver {
-    validate_re($log_driver, '^(none|json-file|syslog|journald|gelf|fluentd|splunk)$',
-                'log_driver must be one of none, json-file, syslog, journald, gelf, fluentd or splunk')
+    validate_re($log_driver, '^(none|json-file|syslog|journald|gelf|fluentd)$', 'log_driver must be one of none, json-file, syslog, journald, gelf or fluentd')
   }
 
   if $selinux_enabled {
@@ -482,8 +434,7 @@ class docker(
   }
 
   if $storage_driver {
-    validate_re($storage_driver, '^(aufs|devicemapper|btrfs|overlay|overlay2|vfs|zfs)$',
-                'Valid values for storage_driver are aufs, devicemapper, btrfs, overlay, overlay2, vfs, zfs.' )
+    validate_re($storage_driver, '^(aufs|devicemapper|btrfs|overlay|vfs|zfs)$', 'Valid values for storage_driver are aufs, devicemapper, btrfs, overlay, vfs, zfs.' )
   }
 
   if $dm_fs {
@@ -506,8 +457,7 @@ class docker(
     fail('You need to provide both $dm_datadev and $dm_metadatadev parameters for direct lvm.')
   }
 
-  if ($dm_basesize or $dm_fs or $dm_mkfsarg or $dm_mountopt or $dm_blocksize or $dm_loopdatasize or
-      $dm_loopmetadatasize or $dm_datadev or $dm_metadatadev) and ($storage_driver != 'devicemapper') {
+  if ($dm_basesize or $dm_fs or $dm_mkfsarg or $dm_mountopt or $dm_blocksize or $dm_loopdatasize or $dm_loopmetadatasize or $dm_datadev or $dm_metadatadev) and ($storage_driver != 'devicemapper') {
     fail('Values for dm_ variables will be ignored unless storage_driver is set to devicemapper.')
   }
 
@@ -520,16 +470,16 @@ class docker(
     validate_string($tls_key)
   }
 
-  class { 'docker::repos': }
-  -> class { 'docker::install': }
-  -> class { 'docker::config': }
-  ~> class { 'docker::service': }
-  contain 'docker::repos'
-  contain 'docker::install'
-  contain 'docker::config'
-  contain 'docker::service'
+  class { 'docker_old::repos': } ->
+  class { 'docker_old::install': } ->
+  class { 'docker_old::config': } ~>
+  class { 'docker_old::service': }
+  contain 'docker_old::repos'
+  contain 'docker_old::install'
+  contain 'docker_old::config'
+  contain 'docker_old::service'
 
-  Class['docker'] -> Docker::Registry <||> -> Docker::Image <||> -> Docker::Run <||>
-  Class['docker'] -> Docker::Image <||> -> Docker::Run <||>
-  Class['docker'] -> Docker::Run <||>
+  Class['docker_old'] -> Docker::Registry <||> -> Docker::Image <||> -> Docker::Run <||>
+  Class['docker_old'] -> Docker::Image <||> -> Docker::Run <||>
+  Class['docker_old'] -> Docker::Run <||>
 }

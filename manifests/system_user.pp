@@ -1,4 +1,4 @@
-# == Define: docker::system_user
+# == Define: docker_old::system_user
 #
 # Define to manage docker group users
 #
@@ -6,11 +6,10 @@
 # [*create_user*]
 #   Boolean to cotrol whether the user should be created
 #
-define docker::system_user (
+define docker_old::system_user (
   $create_user = true) {
 
-  include docker
-  $docker_group = $docker::docker_group
+  include docker_old::params
 
   if $create_user {
     ensure_resource('user', $name, {'ensure' => 'present' })
@@ -18,7 +17,7 @@ define docker::system_user (
   }
 
   exec { "docker-system-user-${name}":
-    command => "/usr/sbin/usermod -aG ${docker_group} ${name}",
-    unless  => "/bin/cat /etc/group | grep '^${docker_group}:' | grep -qw ${name}",
+    command => "/usr/sbin/usermod -aG ${docker_old::params::docker_group} ${name}",
+    unless  => "/bin/cat /etc/group | grep '^${docker_old::params::docker_group}:' | grep -qw ${name}",
   }
 }

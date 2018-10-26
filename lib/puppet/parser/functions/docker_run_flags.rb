@@ -50,7 +50,7 @@ module Puppet::Parser::Functions
 
     multi_flags = lambda { |values, format|
       filtered = [values].flatten.compact
-      filtered.map { |val| sprintf(format + " \\\n", val) }
+      filtered.map { |val| sprintf(format, val) }
     }
 
     [
@@ -65,7 +65,8 @@ module Puppet::Parser::Functions
       ['-p %s',             'ports'],
       ['-l %s',             'labels'],
       ['--add-host %s',     'hostentries'],
-      ['-v %s',             'volumes']
+      ['-v %s',             'volumes'],
+      ['-H %s',             'socket_connect'],
     ].each do |(format, key)|
       values    = opts[key]
       new_flags = multi_flags.call(values, format)

@@ -2,7 +2,7 @@
 #
 # A define which executes a command inside a container.
 #
-define docker::exec(
+define docker_old::exec(
   $detach = false,
   $interactive = false,
   $tty = false,
@@ -11,7 +11,7 @@ define docker::exec(
   $unless = undef,
   $sanitise_name = true,
 ) {
-  include docker::params
+  include docker_old::params
 
   $docker_command = $docker::params::docker_command
   validate_string($docker_command)
@@ -31,7 +31,7 @@ define docker::exec(
 
 
   if $sanitise_name {
-    $sanitised_container = regsubst($container, '[^0-9A-Za-z.\-_]', '-', 'G')
+    $sanitised_container = regsubst($container, '[^0-9A-Za-z.\-]', '-', 'G')
   } else {
     $sanitised_container = $container
   }

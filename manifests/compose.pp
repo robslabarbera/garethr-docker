@@ -1,4 +1,4 @@
-# == Class: docker::compose
+# == Class: docker_old::compose
 #
 # Class to install Docker Compose using the recommended curl command.
 #
@@ -13,58 +13,32 @@
 #   The version of Docker Compose to install.
 #   Defaults to the value set in $docker::params::compose_version
 #
-# [*install_path*]
-#   The path where to install Docker Compose.
-#   Defaults to the value set in $docker::params::compose_install_path
-#
-# [*proxy*]
-#   Proxy to use for downloading Docker Compose.
-#
-class docker::compose(
+class docker_old::compose(
   $ensure = 'present',
-  $version = $docker::params::compose_version,
-  $install_path = $docker::params::compose_install_path,
-  $proxy = undef
-) inherits docker::params {
+  $version = $docker::params::compose_version
+) inherits docker_old::params {
   validate_string($version)
   validate_re($ensure, '^(present|absent)$')
-  validate_absolute_path($install_path)
-  if $proxy != undef {
-      validate_re($proxy, '^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})(:[\d])?([\/\w \.-]*)*\/?$')
-  }
 
   if $ensure == 'present' {
-    ensure_packages(['curl'])
-
-    if $proxy != undef {
-        $proxy_opt = "--proxy ${proxy}"
-    } else {
-        $proxy_opt = ''
-    }
-
     exec { "Install Docker Compose ${version}":
       path    => '/usr/bin/',
       cwd     => '/tmp',
-      command => "curl -s -L ${proxy_opt} https://github.com/docker/compose/releases/download/${version}/docker-compose-${::kernel}-x86_64 > ${install_path}/docker-compose-${version}",
-      creates => "${install_path}/docker-compose-${version}",
-      require => Package['curl'],
-    }
-
-    file { "${install_path}/docker-compose-${version}":
-      owner   => 'root',
-      mode    => '0755',
-      require => Exec["Install Docker Compose ${version}"]
-    }
-
-    file { "${install_path}/docker-compose":
-      ensure  => 'link',
-      target  => "${install_path}/docker-compose-${version}",
-      require => File["${install_path}/docker-compose-${version}"]
+      command => "curl -s -L https://github.com/docker/compose/releases/download/${version}/docker-compose-${::kernel}-x86_64 > /usr/local/bin/docker-compose-${version}",
+      creates => "/usr/local/bin/docker-compose-${version}"
+    } ->
+    file { "/usr/local/bin/docker-compose-${version}":
+      owner => 'root',
+      mode  => '0755'
+    } ->
+    file { '/usr/local/bin/docker-compose':
+      ensure => 'link',
+      target => "/usr/local/bin/docker-compose-${version}",
     }
   } else {
     file { [
-      "${install_path}/docker-compose-${version}",
-      "${install_path}/docker-compose"
+      "/usr/local/bin/docker-compose-${version}",
+      '/usr/local/bin/docker-compose'
     ]:
       ensure => absent,
     }

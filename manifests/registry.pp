@@ -27,7 +27,7 @@
 #   users home directory
 #
 #
-define docker::registry(
+define docker_old::registry(
   $server      = $title,
   $ensure      = 'present',
   $username    = undef,
@@ -35,7 +35,7 @@ define docker::registry(
   $email       = undef,
   $local_user  = 'root',
 ) {
-  include docker::params
+  include docker_old::params
 
   validate_re($ensure, '^(present|absent)$')
 
@@ -46,21 +46,15 @@ define docker::registry(
       $auth_cmd = "${docker_command} login -u '${username}' -p \"\${password}\" -e '${email}' ${server}"
       $auth_environment = "password=${password}"
     }
-    elsif $username != undef and $password != undef {
-      $auth_cmd = "${docker_command} login -u '${username}' -p \"\${password}\" ${server}"
-      $auth_environment = "password=${password}"
-    }
     else {
       $auth_cmd = "${docker_command} login ${server}"
-      $auth_environment = undef
     }
   }
   else {
-    $auth_cmd = "${docker_command} logout ${server}"
-    $auth_environment = undef
+      $auth_cmd = "${docker_command} logout ${server}"
   }
 
-  exec { "${title} auth":
+  exec { "auth against ${server}":
     environment => $auth_environment,
     command     => $auth_cmd,
     user        => $local_user,

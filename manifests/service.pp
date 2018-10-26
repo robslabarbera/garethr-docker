@@ -1,4 +1,4 @@
-# == Class: docker::service
+# == Class: docker_old::service
 #
 # Class to manage the docker service daemon
 #
@@ -36,7 +36,7 @@
 #   Valid values are 'true', 'false'.
 #   Defaults to 'true'.
 #
-class docker::service (
+class docker_old::service (
   $docker_command                    = $docker::docker_command,
   $service_name                      = $docker::service_name,
   $daemon_subcommand                 = $docker::daemon_subcommand,
@@ -44,7 +44,6 @@ class docker::service (
   $ip_forward                        = $docker::ip_forward,
   $iptables                          = $docker::iptables,
   $ip_masq                           = $docker::ip_masq,
-  $icc                               = $docker::icc,
   $bridge                            = $docker::bridge,
   $fixed_cidr                        = $docker::fixed_cidr,
   $default_gateway                   = $docker::default_gateway,
@@ -97,14 +96,12 @@ class docker::service (
   $storage_pool_autoextend_percent   = $docker::storage_pool_autoextend_percent,
   $storage_config                    = $docker::storage_config,
   $storage_config_template           = $docker::storage_config_template,
-  $storage_setup_file                = $docker::storage_setup_file,
   $service_provider                  = $docker::service_provider,
   $service_config                    = $docker::service_config,
   $service_config_template           = $docker::service_config_template,
   $service_overrides_template        = $docker::service_overrides_template,
   $service_hasstatus                 = $docker::service_hasstatus,
   $service_hasrestart                = $docker::service_hasrestart,
-  $daemon_environment_files          = $docker::daemon_environment_files,
   $tls_enable                        = $docker::tls_enable,
   $tls_verify                        = $docker::tls_verify,
   $tls_cacert                        = $docker::tls_cacert,
@@ -136,7 +133,7 @@ class docker::service (
   }
 
   if $::osfamily == 'RedHat' {
-    file { $storage_setup_file:
+    file { '/etc/sysconfig/docker-storage-setup':
       ensure  => present,
       force   => true,
       content => template('docker/etc/sysconfig/docker-storage-setup.erb'),
@@ -148,7 +145,7 @@ class docker::service (
   case $service_provider {
     'systemd': {
       file { '/etc/systemd/system/docker.service.d':
-        ensure => directory,
+        ensure => directory
       }
 
       if $service_overrides_template {
@@ -174,7 +171,6 @@ class docker::service (
         notify => $_manage_service,
       }
     }
-    default: {}
   }
 
   if $storage_config {
