@@ -384,7 +384,7 @@ class docker_old(
   $manage_service                    = $docker::params::manage_service,
   $root_dir                          = $docker::params::root_dir,
   $tmp_dir                           = $docker::params::tmp_dir,
-  $manage_kernel                     = $docker::params::manage_kernel,
+  $manage_kernel                     = $docker_old::params::manage_kernel,
   $dns                               = $docker::params::dns,
   $dns_search                        = $docker::params::dns_search,
   $socket_group                      = $docker::params::socket_group,
